@@ -3,13 +3,13 @@ module ::MItamae
     module ResourceExecutor
       class Mount < ::MItamae::ResourceExecutor::Base
         def apply
-          if desired.exist && current.exist
+          if desired.mount && current.mount
             # nothing...
-          elsif desired.exist && !current.exist
+          elsif desired.mount && !current.mount
             MItamae.logger.debug "mount: '#{desired.device} #{desired.point} #{desired.type} #{desired.options.join(',')} #{desired.dump} #{desired.pass}'"
-          elsif !desired.exist && current.exist
+          elsif !desired.mount && current.mount
             MItamae.logger.debug "unmount: '#{desired.device} #{desired.point} #{desired.type} #{desired.options.join(',')} #{desired.dump} #{desired.pass}'"
-          elsif !desired.exist && !current.exist
+          elsif !desired.mount && !current.mount
             # nothing...
           end
 
@@ -40,9 +40,9 @@ module ::MItamae
           }
 
           if mounts.include?(mount)
-            current.exist = true
+            current.mount = true
           else
-            current.exist = false
+            current.mount = false
           end
 
           if fstabs.include?(mount)
@@ -55,9 +55,9 @@ module ::MItamae
         def set_desired_attributes(desired, action)
           case action
           when :mount
-            desired.exist = true
+            desired.mount = true
           when :unmount
-            desired.exist = false
+            desired.mount = false
           end
         end
 
