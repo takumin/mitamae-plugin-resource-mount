@@ -63,31 +63,18 @@ module ::MItamae
 
         def parse(lines)
           mounts = []
-
           lines.each_line do |line|
             if line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\d+)\s+(\d+)$/
               mount = {}
-
               mount[:device] = $1
               mount[:point] = $2
               mount[:type] = $3
               mount[:options] = $4.split(',')
               mount[:dump] = $5.to_i
               mount[:pass] = $6.to_i
-
-              case mount[:type]
-              when 'tmpfs'
-                if mount[:options].include?('defaults')
-                  mount[:options].delete('defaults')
-                  mount[:options] << 'rw'
-                  mount[:options] << 'relatime'
-                end
-              end
-
               mounts << mount
             end
           end
-
           mounts
         end
       end
