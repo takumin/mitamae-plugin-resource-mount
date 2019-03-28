@@ -3,12 +3,14 @@ module ::MItamae
     module ResourceExecutor
       class Mount < ::MItamae::ResourceExecutor::Base
         def apply
+          entry = "#{desired.device} #{desired.point} #{desired.type} #{desired.options.join(',')} #{desired.dump} #{desired.pass}"
+
           if desired.mount && current.mount
             # nothing...
           elsif desired.mount && !current.mount
-            MItamae.logger.debug "mount: '#{desired.device} #{desired.point} #{desired.type} #{desired.options.join(',')} #{desired.dump} #{desired.pass}'"
+            MItamae.logger.debug "#{@resource.resource_type}[#{@resource.resource_name}] mount: '#{desired.mount}' entry: '#{entry}'"
           elsif !desired.mount && current.mount
-            MItamae.logger.debug "unmount: '#{desired.device} #{desired.point} #{desired.type} #{desired.options.join(',')} #{desired.dump} #{desired.pass}'"
+            MItamae.logger.debug "#{@resource.resource_type}[#{@resource.resource_name}] mount: '#{desired.mount}' entry: '#{entry}'"
           elsif !desired.mount && !current.mount
             # nothing...
           end
@@ -16,9 +18,9 @@ module ::MItamae
           if desired.fstab && current.fstab
             # nothing...
           elsif desired.fstab && !current.fstab
-            MItamae.logger.debug "fstab append: '#{desired.device} #{desired.point} #{desired.type} #{desired.options.join(',')} #{desired.dump} #{desired.pass}'"
+            MItamae.logger.debug "#{@resource.resource_type}[#{@resource.resource_name}] fstab: '#{desired.fstab}' entry: '#{entry}'"
           elsif !desired.fstab && current.fstab
-            MItamae.logger.debug "fstab remove: '#{desired.device} #{desired.point} #{desired.type} #{desired.options.join(',')} #{desired.dump} #{desired.pass}'"
+            MItamae.logger.debug "#{@resource.resource_type}[#{@resource.resource_name}] fstab: '#{desired.fstab}' entry: '#{entry}'"
           elsif !desired.fstab && !current.fstab
             # nothing...
           end
