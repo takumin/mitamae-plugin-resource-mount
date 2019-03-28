@@ -41,6 +41,18 @@ module ::MItamae
             :pass => desired.pass,
           }
 
+          if mount[:options].include?('defaults') then
+            mounts.map! do |m|
+              m.reject! do |k, v|
+                k == :options
+              end
+            end
+
+            mount.reject! do |k,_|
+              k == :options
+            end
+          end
+
           if mounts.include?(mount)
             current.mount = true
           else
