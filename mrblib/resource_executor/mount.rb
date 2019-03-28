@@ -55,6 +55,18 @@ module ::MItamae
             end
           end
 
+          if action == :unmount then
+            mounts.map! do |m|
+              m.select! do |k, v|
+                k == :point
+              end
+            end
+
+            mount.select! do |k,_|
+              k == :point
+            end
+          end
+
           if mounts.include?(mount)
             current.mount = true
           else
