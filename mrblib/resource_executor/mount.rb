@@ -9,8 +9,10 @@ module ::MItamae
             # nothing...
           elsif desired.mount && !current.mount
             MItamae.logger.debug "#{@resource.resource_type}[#{@resource.resource_name}] mount: '#{desired.mount}' entry: '#{entry}'"
+            mount(desired)
           elsif !desired.mount && current.mount
             MItamae.logger.debug "#{@resource.resource_type}[#{@resource.resource_name}] mount: '#{desired.mount}' entry: '#{entry}'"
+            unmount(desired)
           elsif !desired.mount && !current.mount
             # nothing...
           end
@@ -90,6 +92,44 @@ module ::MItamae
             end
           end
           mounts
+        end
+
+        def mount(entry)
+          unless Dir.exist?(entry.point)
+            Dir.mkdir(entry.point, 0755)
+          end
+
+          result = run_command([
+            'mount',
+            '-f',
+            '-t', entry.type,
+            '-o', entry.options.join(','),
+            entry.device,
+            entry.point,
+          ], error: false)
+
+          if result.success?
+            run_command([
+              'mount',
+              '-t', entry.type,
+              '-o', entry.options.join(','),
+              entry.device,
+              entry.point,
+            ])
+          else
+            raise ArgumentError, "failed fake mount: #{entry.device} -> #{entry.point}"
+          end
+        end
+
+        def unmount(entry)
+          result = run_command([
+            'umount',
+            entry.point,
+          ], error: false)
+
+          unless result.success?
+            raise ArgumentError, "failed umount: #{entry.point}"
+          end
         end
       end
     end
