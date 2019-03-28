@@ -192,7 +192,6 @@ module ::MItamae
           pass_just    = 0 # Ignore last column...
 
           fstab = ''
-
           fstab << device_head.ljust(device_just)
           fstab << point_head.ljust(point_just)
           fstab << type_head.ljust(type_just)
@@ -201,7 +200,21 @@ module ::MItamae
           fstab << pass_head.ljust(pass_just)
           fstab << "\n"
 
-          p fstab
+          @fstabs.each do |v|
+            fstab << v[:device].ljust(device_just)
+            fstab << v[:point].ljust(point_just)
+            fstab << v[:type].ljust(type_just)
+            fstab << v[:options].join(',').ljust(options_just)
+            fstab << v[:dump].to_s.ljust(dump_just)
+            fstab << v[:pass].to_s.ljust(pass_just)
+            fstab << "\n"
+          end
+
+          File.open('/tmp/fstab', mode = 'w') do |f|
+            f.write(fstab)
+          end
+
+          File.read('/tmp/fstab').each_line {|v| p v}
         end
       end
     end
