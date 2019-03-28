@@ -161,8 +161,6 @@ module ::MItamae
         end
 
         def fstab(entry, action)
-          column_size = 6
-
           device_head  = '# <file system>'
           point_head   = '<dir>'
           type_head    = '<type>'
@@ -191,7 +189,7 @@ module ::MItamae
           type_just    = max_length(type_list)
           options_just = max_length(options_list)
           dump_just    = max_length(dump_list)
-          pass_just    = 0 # Ignore Last Entry...
+          pass_just    = 0 # Ignore last column...
 
           fstab = ''
 
