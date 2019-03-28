@@ -30,9 +30,12 @@ module ::MItamae
 
         private
 
+        @mounts = []
+        @fstabs = []
+
         def set_current_attributes(current, action)
-          mounts = parse(File.read('/proc/mounts'))
-          fstabs = parse(File.read('/etc/fstab'))
+          @mounts = parse(File.read('/proc/mounts'))
+          @fstabs = parse(File.read('/etc/fstab'))
 
           mount = {
             :device => desired.device,
@@ -44,7 +47,7 @@ module ::MItamae
           }
 
           if mount[:options].include?('defaults') then
-            mounts.map! do |m|
+            @mounts.map! do |m|
               m.reject! do |k, v|
                 k == :options
               end
@@ -56,7 +59,7 @@ module ::MItamae
           end
 
           if action == :unmount then
-            mounts.map! do |m|
+            @mounts.map! do |m|
               m.select! do |k, v|
                 k == :point
               end
@@ -67,13 +70,13 @@ module ::MItamae
             end
           end
 
-          if mounts.include?(mount)
+          if @mounts.include?(mount)
             current.mount = true
           else
             current.mount = false
           end
 
-          if fstabs.include?(mount)
+          if @fstabs.include?(mount)
             current.fstab = true
           else
             current.fstab = false
