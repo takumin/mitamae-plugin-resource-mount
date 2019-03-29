@@ -60,7 +60,7 @@ module ::MItamae
             end
           end
 
-          if action == :unmount then
+          if action == :unmount || action == :nofstab then
             @mounts.map! do |m|
               m.select! do |k, v|
                 k == :point
@@ -91,6 +91,10 @@ module ::MItamae
             desired.mount = true
           when :unmount
             desired.mount = false
+          when :fstab
+            desired.fstab = true
+          when :nofstab
+            desired.fstab = false
           end
         end
 

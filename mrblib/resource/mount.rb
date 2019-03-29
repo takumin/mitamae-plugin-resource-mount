@@ -9,9 +9,8 @@ module ::MItamae
         define_attribute :options, type: Array, default: ['defaults']
         define_attribute :dump, type: Integer, default: 0
         define_attribute :pass, type: Integer, default: 0
-        define_attribute :fstab, type: [TrueClass, FalseClass], default: false
 
-        self.available_actions = [:mount, :unmount]
+        self.available_actions = [:mount, :unmount, :fstab, :nofstab]
       end
     end
   end
