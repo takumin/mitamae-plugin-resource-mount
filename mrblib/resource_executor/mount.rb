@@ -39,46 +39,24 @@ module ::MItamae
           @mounts = parse(File.read('/proc/mounts'))
           @fstabs = parse(File.read('/etc/fstab'))
 
-          mount = {
-            :device => desired.device,
-            :point => desired.point,
-            :type => desired.type,
-            :options => desired.options,
-            :dump => desired.dump,
-            :pass => desired.pass,
-          }
-
-          if mount[:options].include?('defaults') then
-            @mounts.map! do |m|
-              m.reject! do |k, v|
-                k == :options
-              end
-            end
-
-            mount.reject! do |k,_|
-              k == :options
+          mounts = @mounts.map do |m|
+            m.select do |k,_|
+              k == :point
             end
           end
-
-          if action == :unmount then
-            @mounts.map! do |m|
-              m.select! do |k, v|
-                k == :point
-              end
-            end
-
-            mount.select! do |k,_|
+          fstabs = @fstabs.map do |m|
+            m.select do |k,_|
               k == :point
             end
           end
 
-          if @mounts.include?(mount)
+          if mounts.include?(desired.point)
             current.mount = true
           else
             current.mount = false
           end
 
-          if @fstabs.include?(mount)
+          if fstabs.include?(desired.point)
             current.fstab = true
           else
             current.fstab = false
@@ -87,9 +65,9 @@ module ::MItamae
 
         def set_desired_attributes(desired, action)
           case action
-          when :mount
+          when :present
             desired.mount = true
-          when :unmount
+          when :absent
             desired.mount = false
           end
         end
@@ -149,11 +127,16 @@ module ::MItamae
           end
         end
 
-        def max_length(list)
-          length = 0
-          list.each do |v|
-            if v.to_s.length > length
-              length = v.length
+        def fstab_max_length(symbol, current)
+          length = current
+          @fstabs.each do |v|
+            case v
+            when Array
+              v[symbol].join(',').length
+            when Integer
+              v[symbol].to_s.length
+            when String
+              v[symbol].length
             end
           end
           length += 1
@@ -168,53 +151,42 @@ module ::MItamae
           dump_head    = '<dump>'
           pass_head    = '<pass>'
 
-          device_list  = [device_head ].concat(@fstabs.map {|m| m[:device]})
-          point_list   = [point_head  ].concat(@fstabs.map {|m| m[:point]})
-          type_list    = [type_head   ].concat(@fstabs.map {|m| m[:type]})
-          options_list = [options_head].concat(@fstabs.map {|m| m[:options].join(',')})
-          dump_list    = [dump_head   ].concat(@fstabs.map {|m| m[:dump]})
-          pass_list    = [pass_head   ].concat(@fstabs.map {|m| m[:pass]})
+          device_len  = device_head.length
+          point_len   = point_head.length
+          type_len    = type_head.length
+          options_len = options_head.length
+          dump_len    = dump_head.length
+          pass_len    = pass_head.length
+
+          if !action
+            @fstabs.map do |m|
+              m.reject! do |k, v|
+                k == :point && v == entry.point
+              end
+            end
+          end
+
+          device_len  = fstab_max_length(:device, device_len)
+          point_len   = fstab_max_length(:point, point_len)
+          type_len    = fstab_max_length(:type, type_len)
+          options_len = fstab_max_length(:options, options_len)
+          dump_len    = fstab_max_length(:dump, dump_len)
+          pass_len    = fstab_max_length(:pass, pass_len)
+
+          pass_len = 0 # Ignore last column...
 
           if action
-            device_list  << entry[:device]
-            point_list   << entry[:point]
-            type_list    << entry[:type]
-            options_list << entry[:options].join(',')
-            dump_list    << entry[:dump]
-            pass_list    << entry[:pass]
+            @fstabs << {
+              :device  => entry.device,
+              :point   => entry.point,
+              :type    => entry.type,
+              :options => entry.options,
+              :dump    => entry.dump,
+              :pass    => entry.pass,
+            }
           end
 
-          device_just  = max_length(device_list)
-          point_just   = max_length(point_list)
-          type_just    = max_length(type_list)
-          options_just = max_length(options_list)
-          dump_just    = max_length(dump_list)
-          pass_just    = 0 # Ignore last column...
-
-          fstab = ''
-          fstab << device_head.ljust(device_just)
-          fstab << point_head.ljust(point_just)
-          fstab << type_head.ljust(type_just)
-          fstab << options_head.ljust(options_just)
-          fstab << dump_head.ljust(dump_just)
-          fstab << pass_head.ljust(pass_just)
-          fstab << "\n"
-
-          @fstabs.each do |v|
-            fstab << v[:device].ljust(device_just)
-            fstab << v[:point].ljust(point_just)
-            fstab << v[:type].ljust(type_just)
-            fstab << v[:options].join(',').ljust(options_just)
-            fstab << v[:dump].to_s.ljust(dump_just)
-            fstab << v[:pass].to_s.ljust(pass_just)
-            fstab << "\n"
-          end
-
-          File.open('/tmp/fstab', mode = 'w') do |f|
-            f.write(fstab)
-          end
-
-          File.read('/tmp/fstab').each_line {|v| p v}
+          p @fstabs
         end
       end
     end
