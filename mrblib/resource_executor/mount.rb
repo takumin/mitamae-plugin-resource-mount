@@ -20,16 +20,14 @@ module ::MItamae
 
         private
 
-        @mounts = []
-
         def set_current_attributes(current, action)
-          @mounts = parse(File.read('/proc/mounts'))
+          mounts = parse(File.read('/proc/mounts'))
 
-          mounts = @mounts.map do |m|
+          points = mounts.map do |m|
             m[:point]
           end
 
-          if mounts.include?(desired.point)
+          if points.include?(desired.point)
             current.mount = true
           else
             current.mount = false
