@@ -87,7 +87,8 @@ module ::MItamae
 
         def mount(entry)
           unless Dir.exist?(entry.point)
-            raise AttributeMissingError, "not found mount directory: #{entry.point}"
+            MItamae.logger.error "not found mount directory: #{entry.point}"
+            exit 1
           end
 
           result = run_command([
