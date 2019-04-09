@@ -62,6 +62,14 @@ module ::MItamae
         def set_desired_attributes(desired, action)
           case action
           when :present
+            if desired.device.empty?
+              MItamae.logger.error 'required device parameter'
+              exit 1
+            end
+            if desired.type.empty?
+              MItamae.logger.error "required type parameter"
+              exit 1
+            end
             desired.mount = true
           when :absent
             desired.mount = false
