@@ -109,7 +109,8 @@ module ::MItamae
               entry.point,
             ])
           else
-            raise ArgumentError, "failed fake mount: #{entry.device} -> #{entry.point}"
+            MItamae.logger.error "failed fake mount: #{entry.device} -> #{entry.point}"
+            exit 1
           end
         end
 
@@ -120,7 +121,8 @@ module ::MItamae
           ], error: false)
 
           unless result.success?
-            raise ArgumentError, "failed umount: #{entry.point}"
+            MItamae.logger.error "failed umount: #{entry.point}"
+            exit 1
           end
         end
 
