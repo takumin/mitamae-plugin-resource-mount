@@ -44,7 +44,7 @@ module ::MItamae
               exit 1
             end
             if desired.type.empty?
-              MItamae.logger.error "required type parameter"
+              MItamae.logger.error 'required type parameter'
               exit 1
             end
             desired.mount = true
