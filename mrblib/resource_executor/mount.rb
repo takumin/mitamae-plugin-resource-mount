@@ -8,10 +8,10 @@ module ::MItamae
           if desired.mount && current.mount
             # nothing...
           elsif desired.mount && !current.mount
-            MItamae.logger.debug "#{@resource.resource_type}[#{@resource.resource_name}] mount: '#{desired.mount}' entry: '#{entry}'"
+            MItamae.logger.debug "#{@resource.resource_type}[#{@resource.resource_name}] entry: '#{entry}'"
             mount(desired)
           elsif !desired.mount && current.mount
-            MItamae.logger.debug "#{@resource.resource_type}[#{@resource.resource_name}] mount: '#{desired.mount}' entry: '#{entry}'"
+            MItamae.logger.debug "#{@resource.resource_type}[#{@resource.resource_name}] entry: '#{entry}'"
             unmount(desired)
           elsif !desired.mount && !current.mount
             # nothing...
@@ -20,10 +20,10 @@ module ::MItamae
           if desired.fstab && current.fstab
             # nothing...
           elsif desired.fstab && !current.fstab
-            MItamae.logger.debug "#{@resource.resource_type}[#{@resource.resource_name}] fstab: '#{desired.fstab}' entry: '#{entry}'"
+            MItamae.logger.debug "#{@resource.resource_type}[#{@resource.resource_name}] entry: '#{entry}'"
             fstab(desired, desired.fstab)
           elsif !desired.fstab && current.fstab
-            MItamae.logger.debug "#{@resource.resource_type}[#{@resource.resource_name}] fstab: '#{desired.fstab}' entry: '#{entry}'"
+            MItamae.logger.debug "#{@resource.resource_type}[#{@resource.resource_name}] entry: '#{entry}'"
             fstab(desired, desired.fstab)
           elsif !desired.fstab && !current.fstab
             # nothing...
