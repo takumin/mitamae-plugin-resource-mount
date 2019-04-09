@@ -9,7 +9,6 @@ module ::MItamae
         define_attribute :options, type: Array, default: ['defaults']
         define_attribute :dump, type: Integer, default: 0
         define_attribute :pass, type: Integer, default: 0
-        define_attribute :fstab, type: [FalseClass, TrueClass], default: false
 
         self.available_actions = [:present, :absent]
       end

@@ -16,33 +16,16 @@ module ::MItamae
           elsif !desired.mount && !current.mount
             # nothing...
           end
-
-          if desired.fstab && current.fstab
-            # nothing...
-          elsif desired.fstab && !current.fstab
-            MItamae.logger.debug "#{@resource.resource_type}[#{@resource.resource_name}] entry: '#{entry}'"
-            fstab(desired, desired.fstab)
-          elsif !desired.fstab && current.fstab
-            MItamae.logger.debug "#{@resource.resource_type}[#{@resource.resource_name}] entry: '#{entry}'"
-            fstab(desired, desired.fstab)
-          elsif !desired.fstab && !current.fstab
-            # nothing...
-          end
         end
 
         private
 
         @mounts = []
-        @fstabs = []
 
         def set_current_attributes(current, action)
           @mounts = parse(File.read('/proc/mounts'))
-          @fstabs = parse(File.read('/etc/fstab'))
 
           mounts = @mounts.map do |m|
-            m[:point]
-          end
-          fstabs = @fstabs.map do |m|
             m[:point]
           end
 
@@ -50,12 +33,6 @@ module ::MItamae
             current.mount = true
           else
             current.mount = false
-          end
-
-          if fstabs.include?(desired.point)
-            current.fstab = true
-          else
-            current.fstab = false
           end
         end
 
@@ -137,68 +114,6 @@ module ::MItamae
             MItamae.logger.error "failed umount: #{entry.point}"
             exit 1
           end
-        end
-
-        def fstab_max_length(symbol, current)
-          length = current
-          @fstabs.each do |v|
-            case v
-            when Array
-              v[symbol].join(',').length
-            when Integer
-              v[symbol].to_s.length
-            when String
-              v[symbol].length
-            end
-          end
-          length += 1
-          length
-        end
-
-        def fstab(entry, action)
-          device_head  = '# <file system>'
-          point_head   = '<dir>'
-          type_head    = '<type>'
-          options_head = '<options>'
-          dump_head    = '<dump>'
-          pass_head    = '<pass>'
-
-          device_len  = device_head.length
-          point_len   = point_head.length
-          type_len    = type_head.length
-          options_len = options_head.length
-          dump_len    = dump_head.length
-          pass_len    = pass_head.length
-
-          if !action
-            @fstabs.map do |m|
-              m.reject! do |k, v|
-                k == :point && v == entry.point
-              end
-            end
-          end
-
-          device_len  = fstab_max_length(:device, device_len)
-          point_len   = fstab_max_length(:point, point_len)
-          type_len    = fstab_max_length(:type, type_len)
-          options_len = fstab_max_length(:options, options_len)
-          dump_len    = fstab_max_length(:dump, dump_len)
-          pass_len    = fstab_max_length(:pass, pass_len)
-
-          pass_len = 0 # Ignore last column...
-
-          if action
-            @fstabs << {
-              :device  => entry.device,
-              :point   => entry.point,
-              :type    => entry.type,
-              :options => entry.options,
-              :dump    => entry.dump,
-              :pass    => entry.pass,
-            }
-          end
-
-          p @fstabs
         end
       end
     end
