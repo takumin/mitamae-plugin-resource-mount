@@ -40,14 +40,10 @@ module ::MItamae
           @fstabs = parse(File.read('/etc/fstab'))
 
           mounts = @mounts.map do |m|
-            m.select do |k,_|
-              k == :point
-            end
+            m[:point]
           end
           fstabs = @fstabs.map do |m|
-            m.select do |k,_|
-              k == :point
-            end
+            m[:point]
           end
 
           if mounts.include?(desired.point)
