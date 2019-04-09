@@ -27,11 +27,7 @@ module ::MItamae
             m[:point]
           end
 
-          if points.include?(desired.point)
-            current.mount = true
-          else
-            current.mount = false
-          end
+          current.mount = points.include?(desired.point)
         end
 
         def set_desired_attributes(desired, action)
