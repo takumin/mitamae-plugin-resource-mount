@@ -101,13 +101,18 @@ module ::MItamae
           ], error: false)
 
           if result.success?
-            run_command([
+            result = run_command([
               'mount',
               '-t', entry.type,
               '-o', entry.options.join(','),
               entry.device,
               entry.point,
             ])
+
+            unless result.success?
+              MItamae.logger.error "failed mount: #{entry.device} -> #{entry.point}"
+              exit 1
+            end
           else
             MItamae.logger.error "failed fake mount: #{entry.device} -> #{entry.point}"
             exit 1
