@@ -3,34 +3,21 @@ module ::MItamae
     module ResourceExecutor
       class Mount < ::MItamae::ResourceExecutor::Base
         def apply
-          entry = [desired.device, desired.point]
-
-          if !desired.type.nil? and !desired.type.empty?
-            entry << desired.type
-          end
-
-          if !desired.options.nil? and !desired.options.empty?
-            entry << desired.options
-          end
-
-          if !desired.dump.nil? and desired.dump != 0
-            entry << desired.dump
-          end
-
-          if !desired.pass.nil? and desired.pass != 0
-            entry << desired.pass
-          end
-
-          entry = entry.join(' ')
+          MItamae.logger.debug "#{@resource.resource_type}[#{@resource.resource_name}] desired: '#{desired.sort}'"
+          MItamae.logger.debug "#{@resource.resource_type}[#{@resource.resource_name}] current: '#{current.sort}'"
 
           if desired.mount && current.mount
-            # nothing...
+            diff_desired = desired.select{|k,v| k.to_s.match(/^(?:device|point|type)$/)}
+            diff_current = current.select{|k,v| k.to_s.match(/^(?:device|point|type)$/)}
+
+            unless diff_desired == diff_current
+              umount
+              mount
+            end
           elsif desired.mount && !current.mount
-            MItamae.logger.debug "#{@resource.resource_type}[#{@resource.resource_name}] entry: '#{entry}'"
-            mount(desired)
+            mount
           elsif !desired.mount && current.mount
-            MItamae.logger.debug "#{@resource.resource_type}[#{@resource.resource_name}] entry: '#{entry}'"
-            unmount(desired)
+            umount
           elsif !desired.mount && !current.mount
             # nothing...
           end
@@ -39,22 +26,25 @@ module ::MItamae
         private
 
         def set_current_attributes(current, action)
-          mounts = parse(File.read('/proc/mounts'))
-
-          points = mounts.map do |m|
-            m[:point]
+          mounts = parse(File.read('/proc/mounts')).select do |m|
+            m[:point] === attributes['point']
           end
 
-          current.mount = points.include?(desired.point)
+          case mounts.length
+          when 1
+            current.action = :present
+            current.device = mounts[0][:device]
+            current.point  = mounts[0][:point]
+            current.type   = mounts[0][:type]
+          when 0
+            current.action = :absent
+          else
+            raise "there are multiple mount targets: #{attributes['point']}"
+          end
         end
 
         def set_desired_attributes(desired, action)
-          case action
-          when :present
-            desired.mount = true
-          when :absent
-            desired.mount = false
-          end
+          # nothing...
         end
 
         def parse(lines)
@@ -74,48 +64,44 @@ module ::MItamae
           mounts
         end
 
-        def mount(entry)
-          if !Dir.exist?(entry.point)
-            MItamae.logger.error "not found mount directory: #{entry.point}"
-            exit 1
+        def mount
+          if !Dir.exist?(desired.point)
+            raise "not found mount directory: #{desired.point}"
           end
 
           command = ['mount', '-f']
 
-          if !entry.type.nil? and !entry.type.empty?
+          if !desired.type.nil? and !desired.type.empty?
             command << '-t'
-            command << entry.type
+            command << desired.type
           end
 
-          if !entry.options.nil? and !entry.options.empty?
+          if !desired.options.nil? and !desired.options.empty?
             command << '-o'
-            command << entry.options.join(',')
+            command << desired.options.join(',')
           end
 
-          command << entry.device
-          command << entry.point
+          command << desired.device
+          command << desired.point
 
-          result = run_command(command.join(' '), error: false)
+          fake_mount = run_command(command.join(' '), error: false)
 
-          if result.success?
-            result = run_command(command.reject{|v| v == '-f'}.join(' '))
+          if fake_mount.success?
+            mount = run_command(command.reject{|v| v == '-f'}.join(' '))
 
-            if !result.success?
-              MItamae.logger.error "failed mount: #{entry.device} -> #{entry.point}"
-              exit 1
+            if !mount.success?
+              raise "failed mount: #{desired.device} -> #{desired.point}"
             end
           else
-            MItamae.logger.error "failed fake mount: #{entry.device} -> #{entry.point}"
-            exit 1
+            raise "failed fake mount: #{desired.device} -> #{desired.point}"
           end
         end
 
-        def unmount(entry)
-          result = run_command(['umount',entry.point].join(' '), error: false)
+        def umount
+          umount = run_command(['umount',desired.point].join(' '), error: false)
 
-          if !result.success?
-            MItamae.logger.error "failed umount: #{entry.point}"
-            exit 1
+          if !umount.success?
+            raise "failed umount: #{desired.point}"
           end
         end
       end
