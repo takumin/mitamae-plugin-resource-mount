@@ -6,7 +6,7 @@ module ::MItamae
           MItamae.logger.debug "#{@resource.resource_type}[#{@resource.resource_name}] desired: '#{desired.sort}'"
           MItamae.logger.debug "#{@resource.resource_type}[#{@resource.resource_name}] current: '#{current.sort}'"
 
-          if desired.mount && current.mount
+          if desired.action == :present && current.action == :present
             diff_desired = desired.select{|k,v| k.to_s.match(/^(?:device|point|type)$/)}
             diff_current = current.select{|k,v| k.to_s.match(/^(?:device|point|type)$/)}
 
@@ -14,11 +14,11 @@ module ::MItamae
               umount
               mount
             end
-          elsif desired.mount && !current.mount
+          elsif desired.action == :present && current.action == :absent
             mount
-          elsif !desired.mount && current.mount
+          elsif desired.action == :absent && current.action == :present
             umount
-          elsif !desired.mount && !current.mount
+          elsif desired.action == :absent && current.action == :absent
             # nothing...
           end
         end
@@ -30,16 +30,13 @@ module ::MItamae
             m[:point] === attributes['point']
           end
 
-          case mounts.length
-          when 1
+          if mounts.length >= 1
             current.action = :present
             current.device = mounts[0][:device]
             current.point  = mounts[0][:point]
             current.type   = mounts[0][:type]
-          when 0
-            current.action = :absent
           else
-            raise "there are multiple mount targets: #{attributes['point']}"
+            current.action = :absent
           end
         end
 
@@ -86,21 +83,21 @@ module ::MItamae
 
           fake_mount = run_command(command.join(' '), error: false)
 
-          if fake_mount.success?
-            mount = run_command(command.reject{|v| v == '-f'}.join(' '))
-
-            if !mount.success?
-              raise "failed mount: #{desired.device} -> #{desired.point}"
-            end
-          else
+          unless fake_mount.success?
             raise "failed fake mount: #{desired.device} -> #{desired.point}"
+          end
+
+          mount = run_command(command.reject{|v| v == '-f'}.join(' '))
+
+          unless mount.success?
+            raise "failed mount: #{desired.device} -> #{desired.point}"
           end
         end
 
         def umount
           umount = run_command(['umount',desired.point].join(' '), error: false)
 
-          if !umount.success?
+          unless umount.success?
             raise "failed umount: #{desired.point}"
           end
         end
