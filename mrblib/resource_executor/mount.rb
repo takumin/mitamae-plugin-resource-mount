@@ -3,7 +3,25 @@ module ::MItamae
     module ResourceExecutor
       class Mount < ::MItamae::ResourceExecutor::Base
         def apply
-          entry = "#{desired.device} #{desired.point} #{desired.type} #{desired.options.join(',')} #{desired.dump} #{desired.pass}"
+          entry = [desired.device, desired.point]
+
+          if !desired.type.nil? and !desired.type.empty?
+            entry << desired.type
+          end
+
+          if !desired.options.nil? and !desired.options.empty?
+            entry << desired.options
+          end
+
+          if !desired.dump.nil? and desired.dump != 0
+            entry << desired.dump
+          end
+
+          if !desired.pass.nil? and desired.pass != 0
+            entry << desired.pass
+          end
+
+          entry = entry.join(' ')
 
           if desired.mount && current.mount
             # nothing...
@@ -33,14 +51,6 @@ module ::MItamae
         def set_desired_attributes(desired, action)
           case action
           when :present
-            if desired.device.empty?
-              MItamae.logger.error 'required device parameter'
-              exit 1
-            end
-            if desired.type.empty?
-              MItamae.logger.error 'required type parameter'
-              exit 1
-            end
             desired.mount = true
           when :absent
             desired.mount = false
@@ -65,30 +75,32 @@ module ::MItamae
         end
 
         def mount(entry)
-          unless Dir.exist?(entry.point)
+          if !Dir.exist?(entry.point)
             MItamae.logger.error "not found mount directory: #{entry.point}"
             exit 1
           end
 
-          result = run_command([
-            'mount',
-            '-f',
-            '-t', entry.type,
-            '-o', entry.options.join(','),
-            entry.device,
-            entry.point,
-          ], error: false)
+          command = ['mount', '-f']
+
+          if !entry.type.nil? and !entry.type.empty?
+            command << '-t'
+            command << entry.type
+          end
+
+          if !entry.options.nil? and !entry.options.empty?
+            command << '-o'
+            command << entry.options.join(',')
+          end
+
+          command << entry.device
+          command << entry.point
+
+          result = run_command(command.join(' '), error: false)
 
           if result.success?
-            result = run_command([
-              'mount',
-              '-t', entry.type,
-              '-o', entry.options.join(','),
-              entry.device,
-              entry.point,
-            ])
+            result = run_command(command.reject{|v| v == '-f'}.join(' '))
 
-            unless result.success?
+            if !result.success?
               MItamae.logger.error "failed mount: #{entry.device} -> #{entry.point}"
               exit 1
             end
@@ -99,12 +111,9 @@ module ::MItamae
         end
 
         def unmount(entry)
-          result = run_command([
-            'umount',
-            entry.point,
-          ], error: false)
+          result = run_command(['umount',entry.point].join(' '), error: false)
 
-          unless result.success?
+          if !result.success?
             MItamae.logger.error "failed umount: #{entry.point}"
             exit 1
           end
