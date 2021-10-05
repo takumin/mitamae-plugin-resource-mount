@@ -84,13 +84,13 @@ module ::MItamae
           fake_mount = run_command(command.join(' '), error: false)
 
           unless fake_mount.success?
-            raise "failed fake mount: #{desired.device} -> #{desired.point}"
+            raise "failed fake mount: '#{command.join(' ')}'"
           end
 
           mount = run_command(command.reject{|v| v == '-f'}.join(' '))
 
           unless mount.success?
-            raise "failed mount: #{desired.device} -> #{desired.point}"
+            raise "failed mount: '#{command.join(' ')}'"
           end
         end
 
@@ -110,7 +110,7 @@ module ::MItamae
           umount = run_command(command.join(' '), error: false)
 
           unless umount.success?
-            raise "failed umount: #{desired.point}"
+            raise "failed umount: '#{command.join(' ')}'"
           end
         end
       end
