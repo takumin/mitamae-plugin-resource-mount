@@ -95,7 +95,15 @@ module ::MItamae
         end
 
         def umount
-          umount = run_command(['umount',desired.point].join(' '), error: false)
+          command = ['umount']
+
+          if desired.force
+            command << '-f'
+          end
+
+          command << desired.point
+
+          umount = run_command(command.join(' '), error: false)
 
           unless umount.success?
             raise "failed umount: #{desired.point}"
