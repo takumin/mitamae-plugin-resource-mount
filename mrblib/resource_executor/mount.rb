@@ -101,6 +101,10 @@ module ::MItamae
             command << '-f'
           end
 
+          if desired.lazy
+            command << '-l'
+          end
+
           command << desired.point
 
           umount = run_command(command.join(' '), error: false)

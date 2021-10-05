@@ -10,6 +10,7 @@ module ::MItamae
         define_attribute :dump, type: Integer
         define_attribute :pass, type: Integer
         define_attribute :force, type: [FalseClass, TrueClass], default: false
+        define_attribute :lazy, type: [FalseClass, TrueClass], default: false
 
         self.available_actions = [:present, :absent]
       end
